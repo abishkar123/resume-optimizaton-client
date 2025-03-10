@@ -3,4 +3,4 @@
 ## Application coming soon.
 
 ### Resume Optimization Application Architecture 
-![Alt Text](./client/src/assets/resume-op.png)
+![Alt Text](./src/assets/resume-op.png)

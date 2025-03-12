@@ -9,6 +9,7 @@
     position: absolute;
     right:10rem;
     top: 1.4rem;
+    color: whitesmoke;
 }
 
 .logout-button{
@@ -21,9 +22,9 @@
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-weight: bold;
     font-size: 20px;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     margin-left: 4rem;
     color: rgba(0, 0, 255, 0.701);
     position: absolute;
-    
 }
+

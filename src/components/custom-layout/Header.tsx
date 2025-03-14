@@ -39,8 +39,8 @@ export const Header: React.FC = () => {
       <span className="logo">Resume Optimization</span>
 
       <div className="login-access">
-        <button className="bg-blue-600 w-24 h-8" onClick={() => setShow(true)}>
-          <span className="text-xl font-nunito">Log in</span>
+        <button className="bg-blue-600 w-24 h-8 rounded" onClick={() => setShow(true)}>
+          <span className="font-semibold font-nunit ">Log in</span>
         </button>
       </div>
 

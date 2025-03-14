@@ -10,6 +10,7 @@
     right:10rem;
     top: 1.4rem;
     color: whitesmoke;
+   
 }
 
 .logout-button{
@@ -26,5 +27,10 @@
     margin-left: 4rem;
     color: rgba(0, 0, 255, 0.701);
     position: absolute;
+}
+
+.body-home{
+    display: flex;
+    justify-content: center;
 }
 

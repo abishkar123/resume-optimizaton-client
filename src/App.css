@@ -1,0 +1,16 @@
+
+/* Styles for small screens (max-width: 430px) */
+@media screen and (max-width: 430px) {
+    .btn-body{
+        margin-left: 10rem;
+    }  
+}
+
+
+/* Styles for iPad portrait mode (768px to 834px width) */
+@media screen and (min-width: 768px) and (max-width: 834px) {
+  
+  .btn-body{
+      margin-left: 40rem;
+  }
+}

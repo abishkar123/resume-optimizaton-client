@@ -1,5 +1,6 @@
 import react from 'react'
 import './App.css'
+import './components/custom-layout/Layout.css'
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Dashboard } from './pages/dashboard/Dashboard'
 import { ToastContainer } from 'react-toastify';

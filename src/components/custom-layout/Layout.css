@@ -34,3 +34,43 @@
     justify-content: center;
 }
 
+
+
+.hero{
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    margin-top: 10rem;
+    font-weight: 650;
+}
+
+.btn-body{
+    display: flex;
+    margin: 1rem;
+    margin-left:33rem;
+}
+
+
+/* Styles for small screens (max-width: 430px) */
+@media screen and (max-width: 430px) {
+    .btn-body{
+        margin-left: 10rem;
+    }  
+}
+
+
+/* Styles for iPad portrait mode (768px to 834px width) */
+@media screen and (min-width: 768px) and (max-width: 834px) {
+  
+  .btn-body{
+      margin-left: 10rem;
+  }
+}
+
+
+
+
+
+  
+ 
+  

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../Layout.css";
+import "./Layout.css";
 import { provider, signInWithPopup } from "../../firebase/FirebaseConfig";
 import { getAuth, signOut } from "firebase/auth";
 import { toast } from "react-toastify";
@@ -40,7 +40,7 @@ export const Header: React.FC = () => {
 
       <div className="login-access">
         <button className="bg-blue-600 w-24 h-8 rounded" onClick={() => setShow(true)}>
-          <span className="font-semibold font-nunit ">Log in</span>
+          <span className="font-semibold font-nunito">Log in</span>
         </button>
       </div>
 

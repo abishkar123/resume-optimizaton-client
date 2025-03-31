@@ -12,7 +12,7 @@ export const HomeBody : React.FC = () => {
             
         </div>
 
-        <div className='btn-body'>
+        <div className='homebody'>
           <button className='bg-blue-500 w-28 h-11 rounded-md text-white font-semibold font-nunito'>
             Try for Free
           </button>

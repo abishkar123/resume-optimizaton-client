@@ -44,27 +44,78 @@
     font-weight: 650;
 }
 
-.btn-body{
+.homebody{
     display: flex;
     margin: 1rem;
     margin-left:33rem;
 }
 
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .header-container {
+        padding: 0 2rem;
+    }
 
-/* Styles for small screens (max-width: 430px) */
-@media screen and (max-width: 430px) {
-    .btn-body{
-        margin-left: 10rem;
-    }  
+    .auth-buttons {
+        gap: 1rem;
+    }
+
+    .homebody {
+        margin: 1rem;
+        margin-left: 7rem;
+    }
+
+    .hero {
+        font-size: 32px;
+    }
+
+    .logo{
+        margin-left:1rem;
+    }
+
+    .login-access{   
+        position: absolute;
+        right:8rem;
+        top: 1.4rem;
+        color: whitesmoke;
+       
+    }
+    
+    .logout-button{
+        position: absolute;
+        right:4rem;
+        top: 1.4rem;
+    }
 }
 
+@media screen and (max-width: 430px) {
+    .header-container {
+        flex-direction: column;
+        height: auto;
+        padding: 1rem;
+        text-align: center;
+    }
 
-/* Styles for iPad portrait mode (768px to 834px width) */
+    .auth-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .homebody {
+        margin-left: 2rem;
+    }
+
+    .hero {
+        font-size: 14px;
+        margin-top: 2rem;
+    }
+}
+
 @media screen and (min-width: 768px) and (max-width: 834px) {
-  
-  .btn-body{
-      margin-left: 10rem;
-  }
+    .homebody {
+        margin-left: 6rem;
+    }
 }
 
 

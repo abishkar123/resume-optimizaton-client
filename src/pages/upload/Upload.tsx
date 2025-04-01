@@ -36,17 +36,17 @@ const UploadPage : React.FC = () => {
     setFile(selectedFile);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e:any) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e:any) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e:any) => {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;

@@ -53,14 +53,14 @@ export const Header: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between px-4 md:px-8 h-20 w-full shadow-md">
-  {/* Logo - aligned left */}
+  
   <Link to="/" className="no-underline">
     <span className="font-bold text-xl text-blue-600 font-['Trebuchet_MS',_sans-serif]">
       Resume Optimization
     </span>
   </Link>
   
-  {/* Button container - aligned right */}
+  
   <div className="flex items-center gap-4">
     <button 
       className="bg-blue-600 w-24 h-8 rounded hidden md:block" 
@@ -69,7 +69,6 @@ export const Header: React.FC = () => {
       <span className="font-semibold font-nunito text-white">Log in</span>
     </button>
     
-    {/* Mobile login button (shows only on small screens) */}
     <button 
       className="bg-blue-600 w-20 h-8 rounded md:hidden" 
       onClick={() => setShow(true)}
@@ -91,7 +90,7 @@ export const Header: React.FC = () => {
     </button>
   </div>
   
-  {/* Modal remains largely unchanged */}
+ 
   <Modal show={show} onHide={() => setShow(false)} centered>
     <Modal.Header closeButton className="border-bottom-0">
       <Modal.Title className="w-100 text-center font-inter fw-bold">Sign Up</Modal.Title>

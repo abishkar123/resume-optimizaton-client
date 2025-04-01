@@ -36,6 +36,8 @@ const UploadPage : React.FC = () => {
     setFile(selectedFile);
   };
 
+  console.log(file)
+
   const handleDragOver = (e:any) => {
     e.preventDefault();
     setIsDragging(true);

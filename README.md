@@ -1,9 +1,5 @@
-
-
-
-
-# Resume Optimization Applicatio
-Welcome to the vite-react app for resume optimization . This application build for optimizate the resume base on user requirement source by AI Model.
+# Resume Optimization ApplicatioN
+Welcome to the app for resume optimization . This application build for optimizate the resume base on user requirement source by AI Model.
 
 ## Project Overview 
 

@@ -52,68 +52,84 @@ export const Header: React.FC = () => {
   
 
   return (
-    <div className="header-container">
-    <Link to="/">  <span className="logo" >Resume Optimization</span></Link>
-
-      <div className="login-access">
-        <button className="bg-blue-600 w-24 h-8 rounded" onClick={() => setShow(true)}>
-          <span className="font-semibold font-nunito">Log in</span>
-        </button>
-      </div>
-
-      <div className="logout-button">
-        <button onClick={handleOnLogout}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="24px"
-            viewBox="0 -960 960 960"
-            width="24px"
-            fill="#0000F5"
-          >
-            <title>Logout</title>
-            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" />
+    <div className="flex items-center justify-between px-4 md:px-8 h-20 w-full shadow-md">
+  {/* Logo - aligned left */}
+  <Link to="/" className="no-underline">
+    <span className="font-bold text-xl text-blue-600 font-['Trebuchet_MS',_sans-serif]">
+      Resume Optimization
+    </span>
+  </Link>
+  
+  {/* Button container - aligned right */}
+  <div className="flex items-center gap-4">
+    <button 
+      className="bg-blue-600 w-24 h-8 rounded hidden md:block" 
+      onClick={() => setShow(true)}
+    >
+      <span className="font-semibold font-nunito text-white">Log in</span>
+    </button>
+    
+    {/* Mobile login button (shows only on small screens) */}
+    <button 
+      className="bg-blue-600 w-20 h-8 rounded md:hidden" 
+      onClick={() => setShow(true)}
+    >
+      <span className="font-semibold font-nunito text-white text-sm">Log in</span>
+    </button>
+    
+    <button onClick={handleOnLogout} className="flex items-center justify-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="24px"
+        viewBox="0 -960 960 960"
+        width="24px"
+        fill="#0000F5"
+      >
+        <title>Logout</title>
+        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" />
+      </svg>
+    </button>
+  </div>
+  
+  {/* Modal remains largely unchanged */}
+  <Modal show={show} onHide={() => setShow(false)} centered>
+    <Modal.Header closeButton className="border-bottom-0">
+      <Modal.Title className="w-100 text-center font-inter fw-bold">Sign Up</Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="px-4 py-4">
+      <div className="d-flex flex-column align-items-center">
+        <p className="text-muted mb-4">Create an account to continue</p>
+        
+        <button
+          className="btn d-flex align-items-center justify-content-center gap-2 w-100 py-2 mb-3 border rounded-3 shadow-sm"
+          onClick={handleGoogleLogin}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12 h8"/>
+            <path d="M12 8 v8"/>
           </svg>
+          <span className="font-inter fw-medium">Continue with Google</span>
         </button>
+        
+        <div className="position-relative w-100 my-3">
+          <hr className="w-100" />
+          <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">or</span>
+        </div>
+        
+        <button
+          className="btn btn-primary d-flex align-items-center justify-content-center w-100 py-2 rounded-3"
+          // onClick={() => {/* Handle email signup */}}
+        >
+          <span className="font-inter fw-medium">Sign up with Email</span>
+        </button>
+        
+        <p className="mt-4 mb-0 text-center small text-muted">
+          Already have an account? <a href="#" className="text-decoration-none">Log in</a>
+        </p>
       </div>
-
-      <Modal show={show} onHide={() => setShow(false)} centered>
-  <Modal.Header closeButton className="border-bottom-0">
-    <Modal.Title className="w-100 text-center font-inter fw-bold">Sign Up</Modal.Title>
-  </Modal.Header>
-  <Modal.Body className="px-4 py-4">
-    <div className="d-flex flex-column align-items-center">
-      <p className="text-muted mb-4">Create an account to continue</p>
-      
-      <button 
-        className="btn d-flex align-items-center justify-content-center gap-2 w-100 py-2 mb-3 border rounded-3 shadow-sm"
-        onClick={handleGoogleLogin}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M8 12 h8"/>
-          <path d="M12 8 v8"/>
-        </svg>
-        <span className="font-inter fw-medium">Continue with Google</span>
-      </button>
-      
-      <div className="position-relative w-100 my-3">
-        <hr className="w-100" />
-        <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">or</span>
-      </div>
-      
-      <button 
-        className="btn btn-primary d-flex align-items-center justify-content-center w-100 py-2 rounded-3"
-        // onClick={() => {/* Handle email signup */}}
-      >
-        <span className="font-inter fw-medium">Sign up with Email</span>
-      </button>
-      
-      <p className="mt-4 mb-0 text-center small text-muted">
-        Already have an account? <a href="#" className="text-decoration-none">Log in</a>
-      </p>
-    </div>
-  </Modal.Body>
-</Modal>
-    </div>
+    </Modal.Body>
+  </Modal>
+</div>
   );
 };

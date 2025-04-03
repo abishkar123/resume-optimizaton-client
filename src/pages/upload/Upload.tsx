@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import {  Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { Header } from '../../components/custom-layout/Header';
 import { Footer } from '../../components/custom-layout/Footer';
+import axios from 'axios';
 
-const UploadPage : React.FC = () => {
+const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
+
+  const rootUrl = import.meta.env.MODE === 'production'
+  ? import.meta.env.VITE_ROOT_API
+  : 'http://localhost:8000/api/v1/resumes';
+
+  const uploadapi = `${rootUrl}/upload`;
 
   const handleFileChange = (selectedFile: File) => {
     setError('');
+    setUploadSuccess(false);
+    setUploadedFileUrl('');
     
     if (!selectedFile) return;
     
-   
     const validTypes = [
       'application/pdf',
       'application/msword',
@@ -36,19 +46,17 @@ const UploadPage : React.FC = () => {
     setFile(selectedFile);
   };
 
-  console.log(file)
-
-  const handleDragOver = (e:any) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e:any) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e:any) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
@@ -64,24 +72,42 @@ const UploadPage : React.FC = () => {
     }
     
     setIsUploading(true);
+    setUploadProgress(0);
     
-    // Simulate upload with progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 5;
-      setUploadProgress(progress);
+    const formData = new FormData();
+    formData.append('resume', file);
+    
+    try {
+      const response = await axios.post(`${uploadapi}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
+          }
+        }
+      });
       
-      if (progress >= 100) {
-        clearInterval(interval);
+      setUploadSuccess(true);
+      setUploadedFileUrl(response.data.fileUrl);
+      
+      // Reset file after successful upload
+      setTimeout(() => {
+        setUploadProgress(0);
         setIsUploading(false);
+      }, 500);
       
-        setTimeout(() => {
-          setUploadProgress(0);
-          setFile(null);
-          
-        }, 500);
+    } catch (err) {
+      setIsUploading(false);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(`Upload failed: ${err.response.data.message || err.message}`);
+      } else {
+        setError('Upload failed. Please try again later.');
       }
-    }, 100);
+      console.error('Error uploading file:', err);
+    }
   };
 
   const getFileIcon = () => {
@@ -94,14 +120,18 @@ const UploadPage : React.FC = () => {
     }
   };
 
+  const resetForm = () => {
+    setFile(null);
+    setError('');
+    setUploadSuccess(false);
+    setUploadedFileUrl('');
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-  
-     <Header/>
-
-     
-    <div>
-    <main className="flex-grow flex items-center justify-center px-4 py-12">
+      <Header/>
+      
+      <main className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-3xl w-full space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Upload Your Resume</h2>
@@ -110,118 +140,139 @@ const UploadPage : React.FC = () => {
             </p>
           </div>
           
-
           <div className="bg-white shadow rounded-lg p-8">
-            <div 
-              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                ${isDragging ? 'border-blue-500 bg-blue-50' : file ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
-              `}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => document.getElementById('file-input')?.click()}
-            >
-              <input
-                type="file"
-                id="file-input"
-                className="hidden"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleFileChange(e.target.files[0]);
-                  }
-                }}
-              />
-              
-              {file ? (
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-green-600 font-bold">{getFileIcon()}</span>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">{file.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+            {uploadSuccess ? (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                  <svg className="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Upload className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Drag and drop your resume here
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    or click to browse files
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Supported formats: PDF, Word (.doc, .docx) • Max size: 5MB
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-600">{error}</p>
-                  </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Resume Successfully Uploaded!</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Your file has been successfully uploaded and is ready for analysis.
+                </p>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    onClick={resetForm}
+                  >
+                    Upload Another Resume
+                  </button>
                 </div>
               </div>
-            )}
-            
-            
-            {isUploading && (
-              <div className="mt-6">
-                <div className="relative pt-1">
-                  <div className="flex mb-2 items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold inline-block text-blue-600">
-                        Uploading...
-                      </span>
+            ) : (
+              <>
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                    ${isDragging ? 'border-blue-500 bg-blue-50' : file ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
+                  `}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById('file-input')?.click()}
+                >
+                  <input
+                    type="file"
+                    id="file-input"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileChange(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  
+                  {file ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <span className="text-green-600 font-bold">{getFileIcon()}</span>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">{file.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs font-semibold inline-block text-blue-600">
-                        {uploadProgress}%
-                      </span>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Drag and drop your resume here
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        or click to browse files
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Supported formats: PDF, Word (.doc, .docx) • Max size: 5MB
+                      </p>
                     </div>
-                  </div>
-                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-100">
-                    <div style={{ width: `${uploadProgress}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300"></div>
-                  </div>
+                  )}
                 </div>
-              </div>
+                
+                {error && (
+                  <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {isUploading && (
+                  <div className="mt-6">
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold inline-block text-blue-600">
+                            Uploading to server...
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-semibold inline-block text-blue-600">
+                            {uploadProgress}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-100">
+                        <div 
+                          style={{ width: `${uploadProgress}%` }} 
+                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                    onClick={resetForm}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!file || isUploading}
+                    onClick={handleUpload}
+                  >
+                    {isUploading ? 'Uploading...' : 'Optimize My Resume'}
+                  </button>
+                </div>
+              </>
             )}
-            
-          
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
-                onClick={() => {
-                  setFile(null);
-                  setError('');
-                }}
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!file || isUploading}
-                onClick={handleUpload}
-              >
-                {isUploading ? 'Processing...' : 'Optimize My Resume'}
-              </button>
-            </div>
           </div>
-          
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <div className="bg-white p-6 rounded-lg shadow">
@@ -262,9 +313,6 @@ const UploadPage : React.FC = () => {
           </div>
         </div>
       </main>
-
-    </div>
-      
       
       <Footer/>
     </div>

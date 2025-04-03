@@ -152,6 +152,18 @@ const UploadPage: React.FC = () => {
                 <p className="text-sm text-gray-500 mb-6">
                   Your file has been successfully uploaded and is ready for analysis.
                 </p>
+                {uploadedFileUrl && (
+                  <div className="mb-6">
+                    <a 
+                      href={uploadedFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View Uploaded File
+                    </a>
+                  </div>
+                )}
                 <div className="flex justify-center">
                   <button
                     type="button"

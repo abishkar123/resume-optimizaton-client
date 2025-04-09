@@ -7,6 +7,7 @@ import './components/custom-layout/Layout.css';
 import { Dashboard } from './pages/dashboard/Dashboard';
 import { PrivateRoute } from './components/private-route/PrivateRoute';
 import UploadPage from './pages/upload/Upload';
+import AnalysisPage from './pages/Analysis/AnalysisPage';
 
 
 
@@ -24,7 +25,17 @@ const App: React.FC = () => {
             </PrivateRoute>
             
             }/>
+
+
+          <Route path='/analysi' element={
+          <PrivateRoute>
+            <AnalysisPage/>
+          </PrivateRoute>
+        }/>
         </Routes>
+
+        
+
       </BrowserRouter>
       <ToastContainer
         position="top-right"

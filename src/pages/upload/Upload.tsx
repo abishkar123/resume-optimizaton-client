@@ -8,10 +8,15 @@ const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
+  const [optimizationResult, setOptimizationResult] = useState<{
+    originalResume: string;
+    optimizedResume: string;
+  } | null>(null);
 
   const rootUrl =
     import.meta.env.MODE === "production"
@@ -19,12 +24,15 @@ const UploadPage: React.FC = () => {
       : "http://localhost:8000/api/v1/resumes";
 
   const uploadapi = `${rootUrl}/upload`;
+  const optimizeapi = `${rootUrl}/optimize`;
 
   const user = JSON.parse(localStorage.getItem("userInfo") || "{}");
+
   const handleFileChange = (selectedFile: File) => {
     setError("");
     setUploadSuccess(false);
     setUploadedFileUrl("");
+    setOptimizationResult(null);
 
     if (!selectedFile) return;
 
@@ -95,12 +103,10 @@ const UploadPage: React.FC = () => {
           }
         },
       });
-      console.log(response.data, response, formData);
 
       setUploadSuccess(true);
       setUploadedFileUrl(response.data.fileUrl);
 
-      // Reset file after successful upload
       setTimeout(() => {
         setUploadProgress(0);
         setIsUploading(false);
@@ -113,6 +119,36 @@ const UploadPage: React.FC = () => {
         setError("Upload failed. Please try again later.");
       }
       console.error("Error uploading file:", err);
+    }
+  };
+
+  const handleOnOptimize = async () => {
+    try {
+      setIsOptimizing(true);
+      setError("");
+
+      const response = await axios.post(`${optimizeapi}`, {
+        email: user.email,
+        fileUrl: uploadedFileUrl,
+      });
+
+      setOptimizationResult({
+        originalResume: response.data.originalResume,
+        optimizedResume: response.data.optimizedResume,
+      });
+
+      console.log(response, "this is response");
+      setIsOptimizing(false);
+    } catch (err) {
+      setIsOptimizing(false);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(
+          `Optimization failed: ${err.response.data.message || err.message}`
+        );
+      } else {
+        setError("Resume optimization failed. Please try again later.");
+      }
+      console.error("Error optimizing resume:", err);
     }
   };
 
@@ -131,6 +167,7 @@ const UploadPage: React.FC = () => {
     setError("");
     setUploadSuccess(false);
     setUploadedFileUrl("");
+    setOptimizationResult(null);
   };
 
   return (
@@ -144,14 +181,14 @@ const UploadPage: React.FC = () => {
               Upload Your Resume
             </h2>
             <p className="mt-2 text-lg text-gray-600">
-              We'll analyze your resume and provide optimization suggestions By
+              We'll analyze your resume and provide optimization suggestions by
               AI to help you land your dream job
             </p>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-8">
-            {uploadSuccess ? (
-              <div className="text-center py-6">
+          {optimizationResult ? (
+            <div className="bg-white shadow rounded-lg p-8">
+              <div className="text-center py-4 mb-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
                   <svg
                     className="h-10 w-10 text-green-600"
@@ -164,170 +201,265 @@ const UploadPage: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M5 13l4 4L19 7"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Resume Successfully Uploaded!
+                  Resume Optimization Complete!
                 </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Your file has been successfully uploaded and is ready for
-                  analysis.
-                </p>
-                {uploadedFileUrl && (
-                  <div className="mb-6">
-                    <a
-                      href={uploadedFileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View Uploaded File
-                    </a>
-                  </div>
-                )}
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    onClick={resetForm}
-                  >
-                    Upload Another Resume
-                  </button>
+              </div>
+
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-gray-800 mb-3">
+                  Optimization Results:
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-6 whitespace-pre-wrap text-sm max-h-96 overflow-y-auto">
+                  {optimizationResult.optimizedResume}
                 </div>
               </div>
-            ) : (
-              <>
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                    ${
-                      isDragging
-                        ? "border-blue-500 bg-blue-50"
-                        : file
-                        ? "border-green-300 bg-green-50"
-                        : "border-gray-300 hover:border-gray-400"
-                    }
-                  `}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById("file-input")?.click()}
-                >
-                  <input
-                    type="file"
-                    id="file-input"
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileChange(e.target.files[0]);
-                      }
-                    }}
-                  />
 
-                  {file ? (
-                    <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                        <span className="text-green-600 font-bold">
-                          {getFileIcon()}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {file.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <Upload className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        Drag and drop your resume here
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        or click to browse files
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Supported formats: PDF, Word (.doc, .docx) • Max size:
-                        5MB
-                      </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  type="button"
+                  className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={resetForm}
+                >
+                  Upload Another Resume
+                </button>
+                <button
+                  type="button"
+                  className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => {
+                    // Add download functionality if needed
+                    const element = document.createElement("a");
+                    const file = new Blob(
+                      [optimizationResult.optimizedResume],
+                      {
+                        type: "text/plain",
+                      }
+                    );
+                    element.href = URL.createObjectURL(file);
+                    element.download = "optimized-resume.txt";
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+                  }}
+                >
+                  Download Optimized Content
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white shadow rounded-lg p-8">
+              {uploadSuccess ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                    <svg
+                      className="h-10 w-10 text-green-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Resume Successfully Uploaded!
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Your file has been successfully uploaded and is ready for
+                    analysis.
+                  </p>
+                  {uploadedFileUrl && (
+                    <div className="mb-6">
+                      <a
+                        href={uploadedFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        View Uploaded File
+                      </a>
                     </div>
                   )}
-                </div>
-
-                {error && (
-                  <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg
-                          className="h-5 w-5 text-red-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm text-red-600">{error}</p>
-                      </div>
-                    </div>
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      onClick={handleOnOptimize}
+                      disabled={isOptimizing}
+                    >
+                      {isOptimizing ? (
+                        <span className="flex items-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Optimizing Resume...
+                        </span>
+                      ) : (
+                        "Optimize My Resume"
+                      )}
+                    </button>
                   </div>
-                )}
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                      ${
+                        isDragging
+                          ? "border-blue-500 bg-blue-50"
+                          : file
+                          ? "border-green-300 bg-green-50"
+                          : "border-gray-300 hover:border-gray-400"
+                      }
+                    `}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() =>
+                      document.getElementById("file-input")?.click()
+                    }
+                  >
+                    <input
+                      type="file"
+                      id="file-input"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileChange(e.target.files[0]);
+                        }
+                      }}
+                    />
 
-                {isUploading && (
-                  <div className="mt-6">
-                    <div className="relative pt-1">
-                      <div className="flex mb-2 items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold inline-block text-blue-600">
-                            Uploading to server...
+                    {file ? (
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                          <span className="text-green-600 font-bold">
+                            {getFileIcon()}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-xs font-semibold inline-block text-blue-600">
-                            {uploadProgress}%
-                          </span>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {file.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                          <Upload className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          Drag and drop your resume here
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          or click to browse files
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          Supported formats: PDF, Word (.doc, .docx) • Max size:
+                          5MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {error && (
+                    <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-red-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-600">{error}</p>
                         </div>
                       </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-100">
-                        <div
-                          style={{ width: `${uploadProgress}%` }}
-                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300"
-                        ></div>
+                    </div>
+                  )}
+
+                  {isUploading && (
+                    <div className="mt-6">
+                      <div className="relative pt-1">
+                        <div className="flex mb-2 items-center justify-between">
+                          <div>
+                            <span className="text-xs font-semibold inline-block text-blue-600">
+                              Uploading to server...
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-semibold inline-block text-blue-600">
+                              {uploadProgress}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-100">
+                          <div
+                            style={{ width: `${uploadProgress}%` }}
+                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300"
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div className="mt-6 flex justify-end">
-                  <button
-                    type="button"
-                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
-                    onClick={resetForm}
-                  >
-                    Clear
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!file || isUploading}
-                    onClick={handleUpload}
-                  >
-                    {isUploading ? "Uploading..." : "Optimize My Resume"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="button"
+                      className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                      onClick={resetForm}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-blue-700 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!file || isUploading}
+                      onClick={handleUpload}
+                    >
+                      {isUploading ? "Uploading..." : "Upload My Resume"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <div className="bg-white p-6 rounded-lg shadow">

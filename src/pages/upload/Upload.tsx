@@ -24,7 +24,7 @@ const UploadPage: React.FC = () => {
       : "http://localhost:8000/api/v1/resumes";
 
   const uploadapi = `${rootUrl}/upload`;
-  const optimizeapi = `${rootUrl}/optimize`;
+  const optimizeapi = `${rootUrl}/optimize-resume`;
 
   const user = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
@@ -137,7 +137,6 @@ const UploadPage: React.FC = () => {
         optimizedResume: response.data.optimizedResume,
       });
 
-      console.log(response, "this is response");
       setIsOptimizing(false);
     } catch (err) {
       setIsOptimizing(false);

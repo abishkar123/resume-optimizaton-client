@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Upload, ThumbsUp, Edit, Copy, Download, ArrowLeftRight } from "lucide-react";
+import { Upload, ThumbsUp, Edit, Copy, Download } from "lucide-react";
 import { Header } from "../../components/custom-layout/Header";
 import { Footer } from "../../components/custom-layout/Footer";
 import axios from "axios";
@@ -214,7 +214,8 @@ const UploadPage: React.FC = () => {
                   Resume Optimization Complete!
                 </h3>
                 <p className="text-gray-600">
-                  Your resume has been optimized for better visibility with hiring managers and ATS systems.
+                  Your resume has been optimized for better visibility with
+                  hiring managers and ATS systems.
                 </p>
               </div>
 
@@ -256,14 +257,21 @@ const UploadPage: React.FC = () => {
                   <div className="relative">
                     <div className="absolute top-2 right-2 flex space-x-2">
                       <button
-                        onClick={() => copyToClipboard(optimizationResult.optimizedResume)}
+                        onClick={() =>
+                          copyToClipboard(optimizationResult.optimizedResume)
+                        }
                         className="p-1 rounded-md hover:bg-gray-100"
                         title="Copy to clipboard"
                       >
                         <Copy className="h-5 w-5 text-gray-500" />
                       </button>
                       <button
-                        onClick={() => downloadText(optimizationResult.optimizedResume, "optimized-resume.txt")}
+                        onClick={() =>
+                          downloadText(
+                            optimizationResult.optimizedResume,
+                            "optimized-resume.txt"
+                          )
+                        }
                         className="p-1 rounded-md hover:bg-gray-100"
                         title="Download as TXT"
                       >
@@ -291,7 +299,9 @@ const UploadPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div className="font-medium text-gray-700 mb-2 flex items-center">
-                        <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs mr-2">ORIGINAL</span>
+                        <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs mr-2">
+                          ORIGINAL
+                        </span>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-sm h-80 overflow-y-auto border border-gray-200">
                         {optimizationResult.originalResume}
@@ -299,7 +309,9 @@ const UploadPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="font-medium text-gray-700 mb-2 flex items-center">
-                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs mr-2">OPTIMIZED</span>
+                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs mr-2">
+                          OPTIMIZED
+                        </span>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-4 whitespace-pre-wrap text-sm h-80 overflow-y-auto border border-blue-200">
                         {optimizationResult.optimizedResume}
@@ -318,7 +330,10 @@ const UploadPage: React.FC = () => {
                   <li>Enhanced keywords for better ATS visibility</li>
                   <li>Improved action verbs to highlight accomplishments</li>
                   <li>Restructured content for better readability</li>
-                  <li>Streamlined information to focus on relevant skills and experience</li>
+                  <li>
+                    Streamlined information to focus on relevant skills and
+                    experience
+                  </li>
                 </ul>
               </div>
 
@@ -333,7 +348,12 @@ const UploadPage: React.FC = () => {
                 <button
                   type="button"
                   className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => downloadText(optimizationResult.optimizedResume, "optimized-resume.txt")}
+                  onClick={() =>
+                    downloadText(
+                      optimizationResult.optimizedResume,
+                      "optimized-resume.txt"
+                    )
+                  }
                 >
                   Download Optimized Content
                 </button>

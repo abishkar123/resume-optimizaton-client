@@ -3,6 +3,8 @@ import { Upload, ThumbsUp, Edit, Copy, Download } from "lucide-react";
 import { Header } from "../../components/custom-layout/Header";
 import { Footer } from "../../components/custom-layout/Footer";
 import axios from "axios";
+// Add docx library import
+import { Document, Packer, Paragraph, TextRun } from "docx";
 
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -159,14 +161,42 @@ const UploadPage: React.FC = () => {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
-  const downloadText = (content: string, filename: string) => {
-    const element = document.createElement("a");
-    const file = new Blob([content], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = filename;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  // Replace the downloadText function with downloadAsWord
+  const downloadAsWord = (content: string, filename: string) => {
+    // Create a new document
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [new TextRun(content)],
+            }),
+          ],
+        },
+      ],
+    });
+
+    // Ensure the filename ends with .docx
+    if (!filename.toLowerCase().endsWith(".docx")) {
+      filename = filename.replace(/\.[^/.]+$/, "") + ".docx";
+    }
+
+    // Generate the document
+    Packer.toBlob(doc).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const element = document.createElement("a");
+      element.href = url;
+      element.download = filename;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    });
   };
 
   const getFileIcon = () => {
@@ -267,13 +297,13 @@ const UploadPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() =>
-                          downloadText(
+                          downloadAsWord(
                             optimizationResult.optimizedResume,
-                            "optimized-resume.txt"
+                            "optimized-resume"
                           )
                         }
                         className="p-1 rounded-md hover:bg-gray-100"
-                        title="Download as TXT"
+                        title="Download as Word"
                       >
                         <Download className="h-5 w-5 text-gray-500" />
                       </button>
@@ -349,13 +379,13 @@ const UploadPage: React.FC = () => {
                   type="button"
                   className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   onClick={() =>
-                    downloadText(
+                    downloadAsWord(
                       optimizationResult.optimizedResume,
-                      "optimized-resume.txt"
+                      "optimized-resume"
                     )
                   }
                 >
-                  Download Optimized Content
+                  Download Optimized Resume
                 </button>
               </div>
             </div>

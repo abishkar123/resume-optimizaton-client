@@ -1,32 +1,16 @@
-import axios, { AxiosError } from 'axios';
-import { toast } from 'react-toastify';
+import axios from "axios";
 
-const rootURL = "http://localhost:8000/api/v1/resumes";
+const rootUrl =
+  import.meta.env.MODE === "production"
+    ? import.meta.env.VITE_ROOT_API
+    : "http://localhost:8000/api/v1/resumes";
 
-export const PostResumeupload = async (userData: FormData) => {
-  console.log(userData)
-  console.log(rootURL)
+export const fetchAllUsers = async () => {
   try {
-    const { data } = await axios.post(`${rootURL}/upload`, userData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    toast.success('Resume uploaded successfully!');
-
-    console.log(data)
-
-    return data;
+    const response = await axios.get(`${rootUrl}/users`);
+    return response.data.data;
   } catch (error) {
-    const err = error as AxiosError;
-    const message = (err.response?.data as any)?.message || err.message || 'Resume upload failed!';
-    
-    toast.error(message);
-
-    return {
-      status: 'error',
-      message: err.message,
-    };
+    console.error("Failed to fetch users:", error);
+    return [];
   }
 };

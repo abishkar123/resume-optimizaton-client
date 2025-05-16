@@ -3,14 +3,13 @@ import { Upload, ThumbsUp, Edit, Copy, Download } from "lucide-react";
 import { Header } from "../../components/custom-layout/Header";
 import { Footer } from "../../components/custom-layout/Footer";
 import axios from "axios";
-// Add docx library import
-import { Document, Packer, Paragraph, TextRun } from "docx";
 
 const UploadPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -20,6 +19,7 @@ const UploadPage: React.FC = () => {
   const [optimizationResult, setOptimizationResult] = useState<{
     originalResume: string;
     optimizedResume: string;
+    resumeId?: string;
   } | null>(null);
 
   const rootUrl =
@@ -29,6 +29,7 @@ const UploadPage: React.FC = () => {
 
   const uploadapi = `${rootUrl}/upload`;
   const optimizeapi = `${rootUrl}/optimize-resume`;
+  const downloadapi = `${rootUrl}/download`;
 
   const user = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
@@ -139,6 +140,7 @@ const UploadPage: React.FC = () => {
       setOptimizationResult({
         originalResume: response.data.originalResume,
         optimizedResume: response.data.optimizedResume,
+        resumeId: response.data.resumeId,
       });
 
       setIsOptimizing(false);
@@ -160,43 +162,49 @@ const UploadPage: React.FC = () => {
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   };
+  const downloadResume = async (type: "original" | "optimized") => {
+    try {
+      setIsDownloading(true);
+      setError("");
 
-  // Replace the downloadText function with downloadAsWord
-  const downloadAsWord = (content: string, filename: string) => {
-    // Create a new document
-    const doc = new Document({
-      sections: [
+      const email = user.email;
+
+      const response = await axios.post(
+        `${downloadapi}`,
         {
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [new TextRun(content)],
-            }),
-          ],
+          email,
+          type,
         },
-      ],
-    });
+        {
+          responseType: "blob",
+        }
+      );
 
-    // Ensure the filename ends with .docx
-    if (!filename.toLowerCase().endsWith(".docx")) {
-      filename = filename.replace(/\.[^/.]+$/, "") + ".docx";
-    }
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
 
-    // Generate the document
-    Packer.toBlob(doc).then((blob) => {
       const url = window.URL.createObjectURL(blob);
-      const element = document.createElement("a");
-      element.href = url;
-      element.download = filename;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${type}-resume.docx`;
+      document.body.appendChild(link);
+      link.click();
 
-      // Clean up
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 100);
-    });
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setIsDownloading(false);
+    } catch (err) {
+      setIsDownloading(false);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(
+          `Download failed: ${err.response.data.message || err.message}`
+        );
+      } else {
+        setError("Resume download failed. Please try again later.");
+      }
+      console.error("Error downloading resume:", err);
+    }
   };
 
   const getFileIcon = () => {
@@ -296,14 +304,10 @@ const UploadPage: React.FC = () => {
                         <Copy className="h-5 w-5 text-gray-500" />
                       </button>
                       <button
-                        onClick={() =>
-                          downloadAsWord(
-                            optimizationResult.optimizedResume,
-                            "optimized-resume"
-                          )
-                        }
+                        onClick={() => downloadResume("optimized")}
                         className="p-1 rounded-md hover:bg-gray-100"
                         title="Download as Word"
+                        disabled={isDownloading}
                       >
                         <Download className="h-5 w-5 text-gray-500" />
                       </button>
@@ -320,8 +324,29 @@ const UploadPage: React.FC = () => {
                 )}
 
                 {activeTab === "original" && (
-                  <div className="bg-gray-50 rounded-lg p-6 whitespace-pre-wrap text-sm max-h-96 overflow-y-auto border border-gray-200">
-                    {optimizationResult.originalResume}
+                  <div className="relative">
+                    <div className="absolute top-2 right-2 flex space-x-2">
+                      <button
+                        onClick={() =>
+                          copyToClipboard(optimizationResult.originalResume)
+                        }
+                        className="p-1 rounded-md hover:bg-gray-100"
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="h-5 w-5 text-gray-500" />
+                      </button>
+                      <button
+                        onClick={() => downloadResume("original")}
+                        className="p-1 rounded-md hover:bg-gray-100"
+                        title="Download as Word"
+                        disabled={isDownloading}
+                      >
+                        <Download className="h-5 w-5 text-gray-500" />
+                      </button>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-6 whitespace-pre-wrap text-sm max-h-96 overflow-y-auto border border-gray-200">
+                      {optimizationResult.originalResume}
+                    </div>
                   </div>
                 )}
 
@@ -332,6 +357,14 @@ const UploadPage: React.FC = () => {
                         <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs mr-2">
                           ORIGINAL
                         </span>
+                        <button
+                          onClick={() => downloadResume("original")}
+                          className="ml-auto p-1 rounded-md hover:bg-gray-100"
+                          title="Download as Word"
+                          disabled={isDownloading}
+                        >
+                          <Download className="h-4 w-4 text-gray-500" />
+                        </button>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-sm h-80 overflow-y-auto border border-gray-200">
                         {optimizationResult.originalResume}
@@ -342,6 +375,14 @@ const UploadPage: React.FC = () => {
                         <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs mr-2">
                           OPTIMIZED
                         </span>
+                        <button
+                          onClick={() => downloadResume("optimized")}
+                          className="ml-auto p-1 rounded-md hover:bg-gray-100"
+                          title="Download as Word"
+                          disabled={isDownloading}
+                        >
+                          <Download className="h-4 w-4 text-gray-500" />
+                        </button>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-4 whitespace-pre-wrap text-sm h-80 overflow-y-auto border border-blue-200">
                         {optimizationResult.optimizedResume}
@@ -367,6 +408,30 @@ const UploadPage: React.FC = () => {
                 </ul>
               </div>
 
+              {error && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   type="button"
@@ -378,14 +443,36 @@ const UploadPage: React.FC = () => {
                 <button
                   type="button"
                   className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() =>
-                    downloadAsWord(
-                      optimizationResult.optimizedResume,
-                      "optimized-resume"
-                    )
-                  }
+                  onClick={() => downloadResume("optimized")}
+                  disabled={isDownloading}
                 >
-                  Download Optimized Resume
+                  {isDownloading ? (
+                    <span className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Downloading...
+                    </span>
+                  ) : (
+                    "Download Optimized Resume"
+                  )}
                 </button>
               </div>
             </div>

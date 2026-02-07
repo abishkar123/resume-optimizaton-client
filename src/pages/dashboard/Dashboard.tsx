@@ -3,12 +3,11 @@ import { Header } from '../../components/custom-layout/Header'
 import { HomeBody } from '../../components/body/HomeBody'
 
 
-export const Dashboard   : React.FC  =() => {
+export const Dashboard: React.FC = () => {
   return (
-    <div>
-        <Header/>
-        <HomeBody/>
-        
+    <div className="min-h-screen bg-white">
+      <Header />
+      <HomeBody />
     </div>
   )
-} 
+}

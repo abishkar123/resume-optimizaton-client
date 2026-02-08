@@ -1,3 +1,5 @@
+import typography from '@tailwindcss/typography';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,10 +9,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'nunito': ['Nunito', 'sans-serif'], 
+        'nunito': ['Nunito', 'sans-serif'],
         'inter': ["Inter", "sans-serif"],
       },
     },
   },
-  plugins: [],
+  plugins: [
+    typography,
+  ],
 }

@@ -43,6 +43,7 @@ export const Header: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
 
       if (result.user) {
+        const idToken = await result.user.getIdToken();
         const userInfo: UserInfo = {
           displayName: result.user.displayName,
           email: result.user.email,
@@ -51,6 +52,7 @@ export const Header: React.FC = () => {
         };
 
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
+        localStorage.setItem("authToken", idToken);
         setUser(userInfo);
 
         toast.success(`Welcome, ${result.user.displayName || "User"}!`);
